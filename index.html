@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <title>Trimble Connect Object Labeler</title>
+    <!-- Laad de officiële Trimble Connect Workspace API -->
+    <script src="https://trimble.com"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 15px;
+            background-color: #f5f5f5;
+        }
+        button {
+            background-color: #007fa8;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #005a78;
+        }
+    </style>
+</head>
+<body>
+
+    <h3>Object Labeler</h3>
+    <button id="btn-labels">Zet Labels op Zichtbare Objecten</button>
+
+    <script>
+        let connectClient;
+
+        // 1. Initialiseer de connectie met de Trimble Connect Viewer
+        window.TrimbleConnectWorkspace.connect(window.parent).then((client) => {
+            connectClient = client;
+            console.log("Succesvol verbonden met Trimble Connect");
+        }).catch((error) => {
+            console.error("Verbinding mislukt:", error);
+        });
+
+        document.getElementById('btn-labels').addEventListener('click', async () => {
+            if (!connectClient) {
+                alert("Nog niet verbonden met Trimble Connect.");
+                return;
+            }
+
+            try {
+                // 2. Haal alle objecten op die momenteel zichtbaar zijn in het venster
+                const visibilityInfo = await connectClient.viewer.getObjectsVisibility();
+                
+                // Filter alleen de objecten die daadwerkelijk zichtbaar zijn
+                const visibleObjectIds = Object.keys(visibilityInfo).filter(id => visibilityInfo[id] === true);
+
+                if (visibleObjectIds.length === 0) {
+                    alert("Geen zichtbare objecten gevonden in het venster.");
+                    return;
+                }
+
+                // 3. Haal de metadata/eigenschappen op van deze objecten om een labelnaam te bepalen
+                const objectProperties = await connectClient.viewer.getObjectProperties(visibleObjectIds);
+
+                // 4. Maak de labels aan in de 3D-viewer
+                const labelsToCreate = objectProperties.map(obj => {
+                    // We proberen de naam van het object te pakken, anders gebruiken we de ID
+                    const labelText = obj.name || `Object ${obj.id}`;
+                    
+                    return {
+                        objectId: obj.id,
+                        text: labelText,
+                        // Optioneel: je kunt hier ook styling meegeven zoals kleur of lettergrootte indien ondersteund door de API versie
+                    };
+                });
+
+                // Stuur de labels naar de viewer via de API (UI-aanpassing)
+                // Let op: afhankelijk van de exacte API-versie gebruik je 'addLabels' of 'setLabels'
+                await connectClient.viewer.addLabels(labelsToCreate);
+                
+                alert(`${labelsToCreate.length} labels succesvol geplaatst!`);
+
+            } catch (error) {
+                console.error("Fout bij het ophalen of plaatsen van labels:", error);
+            }
+        });
+    </script>
+</body>
+</html>
