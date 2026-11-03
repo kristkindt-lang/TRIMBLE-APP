@@ -1,0 +1,25 @@
+{
+  "id": "trimble-object-labeler-app",
+  "name": "Object Labeler",
+  "version": "1.0.0",
+  "description": "Toont labels bij alle zichtbare 3D objecten.",
+  "developer": "Kristkindt-Lang",
+  "icon": "https://github.io",
+  "scopes": [
+    "viewer.properties.read",
+    "viewer.visibility.read",
+    "viewer.ui.write"
+  ],
+  "extensionPoints": {
+    "viewer": {
+      "toolbars": [
+        {
+          "id": "labeler-toolbar-btn",
+          "title": "Object Labeler",
+          "url": "https://github.io",
+          "type": "panel"
+        }
+      ]
+    }
+  }
+}
